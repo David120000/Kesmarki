@@ -17,7 +17,7 @@ public class InputFormatValidator {
 
     public InputFormatValidator() {
 
-        nameRegex = "^([A-ZÁÉÚŐÓÜÖÍ]([a-záéúőóüöí.]+[ ]?)){2,}$";
+        nameRegex = "^([A-ZÁÉÚŐÓÜÖÍ]([a-záéúőóüöí.-]+[ ]?)){2,}$";
         idCardNoRegex = "^[1-9][0-9]{5}[A-Z]{2}$";
         phoneNumberRegex = "^[+]?([0-9]+[ -/]?)+[0-9]$";
         emailAddressRegex = "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$";

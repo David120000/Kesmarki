@@ -1,5 +1,7 @@
 package rd.kesmarki_persons_sb_rest.Controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,7 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import rd.kesmarki_persons_sb_rest.Model.Address;
 import rd.kesmarki_persons_sb_rest.Model.Contact;
+import rd.kesmarki_persons_sb_rest.Model.FullDataDTO;
 import rd.kesmarki_persons_sb_rest.Model.Person;
+import rd.kesmarki_persons_sb_rest.Model.PersonContactDTO;
 import rd.kesmarki_persons_sb_rest.Model.ResponseObject;
 import rd.kesmarki_persons_sb_rest.Service.AppService;
 
@@ -76,4 +80,35 @@ public class ApiController {
     public ResponseEntity<ResponseObject<Integer>> deleteContactById(@RequestParam(name="id") int id) {
         return ResponseEntity.ok(appService.deleteContactById(id));
     }
+
+
+    @GetMapping("/fulldata/get/bypersonid")
+    public ResponseEntity<ResponseObject<FullDataDTO>> getFullDataDTOByPersonId(@RequestParam(name="id") int id) {
+        return ResponseEntity.ok(appService.getFullDataDTOByPersonId(id));
+    }
+
+
+    @GetMapping("/fulldata/list/bypersonname")
+    public ResponseEntity<ResponseObject<List<FullDataDTO>>> getFullDataDTOListByPersonName(@RequestParam(name="name") String name) {
+        return ResponseEntity.ok(appService.getFullDataDTOListByPersonName(name));
+    }
+
+
+    @GetMapping("/fulldata/list/bycity")
+    public ResponseEntity<ResponseObject<List<FullDataDTO>>> getFullDataDTOListByCity(@RequestParam(name="city") String city) {
+        return ResponseEntity.ok(appService.getFullDataDTOListByCity(city));
+    }
+
+
+    @GetMapping("/personandcontact/get/bypersonid")
+    public ResponseEntity<ResponseObject<PersonContactDTO>> getPersonContactDTOByPersonId(@RequestParam(name="id") int id) {
+        return ResponseEntity.ok(appService.getPersonContactDTOByPersonId(id));
+    }
+
+
+    @GetMapping("/personandcontact/list/bypersonname")
+    public ResponseEntity<ResponseObject<List<PersonContactDTO>>> getPersonContactDTOListByPersonName(@RequestParam(name="name") String name) {
+        return ResponseEntity.ok(appService.getPersonContactDTOListByPersonName(name));
+    }
+
 }

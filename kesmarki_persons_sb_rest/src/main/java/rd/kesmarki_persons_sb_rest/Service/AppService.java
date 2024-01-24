@@ -487,5 +487,67 @@ public class AppService {
         return dto;
     }
 
+
+    public ResponseObject<Integer> deleteAllPersonDataByPersonId(int id) {
+
+        String errorMessage = "";
+
+        ResponseObject<Person> personResponse = this.getPersonById(id);
+
+        if(personResponse.isTaskExecutedSuccessfully()) {
+            // get the person object for its address ids, then delete it from the database
+            Person person = personResponse.getAffectedObject();
+            this.deletePersonById(id);
+            
+            List<Person> peopleAtThisAddress = personRepository.findByAddressId( person.getPermanentAddressId() );
+            // check how many other people are connected to the person's permanent address:
+            if(peopleAtThisAddress.size() == 0) {
+
+                List<Contact> contactsForThisAddress = contactRepository.findContactByAddressId( person.getPermanentAddressId() );
+
+                for(Contact contact : contactsForThisAddress) {
+                    
+                    this.deleteContactById(contact.getId());
+                }
+                // when there are no more persons or contacts bound to the permanent address, remove it:
+                this.deleteAddressById( person.getPermanentAddressId() );
+
+                if(person.getTemporaryAddressId() != null) {
+                    
+                    peopleAtThisAddress = personRepository.findByAddressId( person.getTemporaryAddressId() );
+                    // check how many other people are connected to the person's temporary address:
+                    if(peopleAtThisAddress.size() == 0) {
+
+                        contactsForThisAddress = contactRepository.findContactByAddressId( person.getTemporaryAddressId() );
+
+                        for(Contact contact : contactsForThisAddress) {
+                            
+                            this.deleteContactById(contact.getId());
+                        }
+                        // when there are no more persons or contacts bound to the temporary address, remove it:
+                        this.deleteAddressById( person.getTemporaryAddressId() );
+                    }
+                    else {
+                        errorMessage += "The temporary address id " + person.getTemporaryAddressId() + " connected to " + person.getName() + " (id " + person.getId() + ") cannot be removed " 
+                        + "beacuse other people also were bound to this address. ";
+                    }
+                }
+
+
+            }
+            else {
+                errorMessage += "The permanent address id " + person.getPermanentAddressId() + " connected to " + person.getName() + " (id " + person.getId() + ") cannot be removed " 
+                + "beacuse other people also were bound to this address. ";
+            }
+        }
+        else {
+            errorMessage += personResponse.getMessage();
+        }
+
+        ResponseObject<Integer> responseObject = mapper.createResponseObject(personResponse.isTaskExecutedSuccessfully(), Integer.valueOf(id), errorMessage);
+
+        return responseObject;
+    }
+
     
 }

@@ -85,7 +85,8 @@ public class AppService {
 
         boolean persistableName = validator.validatePersonNameFormat(person.getName());
         boolean persistableIdCardNo = validator.validateIdCardNumberFormat(person.getIdentityCardNo());
-        boolean validRequest = (persistableName && persistableIdCardNo);
+        boolean persistableAddressIds = validator.validateAddressIds(person.getPermanentAddressId(), person.getTemporaryAddressId());
+        boolean validRequest = (persistableName && persistableIdCardNo && persistableAddressIds);
 
         if(validRequest) {
 
@@ -106,7 +107,11 @@ public class AppService {
             }
     
             if(persistableIdCardNo == false) {
-                errorMessage += "Person's identity card number should be composed of six numbers and two capital letters.";
+                errorMessage += "Person's identity card number should be composed of six numbers and two capital letters. ";
+            }
+
+            if(persistableAddressIds == false) {
+                errorMessage += "Person's permanent and temporary addresses should be different.";
             }
         }
 

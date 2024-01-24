@@ -80,5 +80,20 @@ public class InputFormatValidator {
 
         return matcher.find();
     }
+
+
+    public boolean validateAddressIds(int permanentAddressId, Integer temporaryAddressId) {
+        
+        boolean differ = false;
+
+        if(temporaryAddressId != null) {
+            differ = (permanentAddressId != temporaryAddressId);
+        }
+        else {
+            differ = true;
+        }
+
+        return differ;
+    }
     
 }

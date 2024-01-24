@@ -1,5 +1,7 @@
 package rd.kesmarki_persons_sb_rest.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import rd.kesmarki_persons_sb_rest.Model.Address;
 import rd.kesmarki_persons_sb_rest.Model.Contact;
+import rd.kesmarki_persons_sb_rest.Model.FullDataDTO;
 import rd.kesmarki_persons_sb_rest.Model.Person;
 import rd.kesmarki_persons_sb_rest.Model.ResponseObject;
 import rd.kesmarki_persons_sb_rest.Repository.AddressesJPARepository;
@@ -47,7 +50,27 @@ public class AppService {
             errorMessage = "Cannot find a Person with id " + id + ".";
         }
 
-        return new ResponseObject<Person>(isPresent, errorMessage, person);
+        ResponseObject<Person> responseObject = mapper.createResponseObject(isPresent, person, errorMessage);
+
+        return responseObject;
+    }
+
+
+    public ResponseObject<List<Person>> getPersonByName(String name) {
+
+        boolean personsFound = true;
+        String errorMessage = null;
+
+        List<Person> personListByName = personRepository.findByName(name);
+
+        if(personListByName.size() == 0) {
+            errorMessage = "There is no Person in the database with the name " + name + ".";
+            personsFound = false;
+        }
+
+        ResponseObject<List<Person>> responseObject = mapper.createResponseObject(personsFound, personListByName, errorMessage);
+
+        return responseObject;
     }
 
 
@@ -85,16 +108,19 @@ public class AppService {
                 errorMessage += "Person's identity card number should be composed of six numbers and two capital letters.";
             }
         }
+
+        ResponseObject<Person> responseObject = mapper.createResponseObject(validRequest, person, errorMessage);
         
-        return new ResponseObject<Person>(validRequest, errorMessage, person);
+        return responseObject;
     }
 
 
     public ResponseObject<Integer> deletePersonById(int id) {
 
         personRepository.deleteById(id);
+        ResponseObject<Integer> responseObject = mapper.createResponseObject(true, Integer.valueOf(id));
 
-        return new ResponseObject<Integer>(true, "", Integer.valueOf(id));
+        return responseObject;
     }
 
 
@@ -113,7 +139,9 @@ public class AppService {
             errorMessage = "Cannot find an Address with id " + id + ".";
         }
 
-        return new ResponseObject<Address>(isPresent, errorMessage, address);
+        ResponseObject<Address> responseObject = mapper.createResponseObject(isPresent, address, errorMessage);
+
+        return responseObject;
     }
 
 
@@ -141,8 +169,10 @@ public class AppService {
         else {
             errorMessage += "Address cannot be presisted. The country code should match an ISO 3166-1 code.";
         }
+
+        ResponseObject<Address> responseObject = mapper.createResponseObject(executableRequest, address, errorMessage);
         
-        return new ResponseObject<Address>(executableRequest, errorMessage, address);
+        return responseObject;
     }
 
 
@@ -160,7 +190,9 @@ public class AppService {
             executableRequest = false;
         }
 
-        return new ResponseObject<Integer>(executableRequest, errorMessage, Integer.valueOf(id));
+        ResponseObject<Integer> responseObject = mapper.createResponseObject(executableRequest, Integer.valueOf(id), errorMessage);
+
+        return responseObject;
     }
 
 
@@ -179,7 +211,9 @@ public class AppService {
             errorMessage = "Cannot find a Contact with id " + id + ".";
         }
 
-        return new ResponseObject<Contact>(isPresent, errorMessage, contact);
+        ResponseObject<Contact> responseObject = mapper.createResponseObject(isPresent, contact, errorMessage);
+
+        return responseObject;
     }
 
 
@@ -220,16 +254,107 @@ public class AppService {
                 + "The domain name can only be composed of English letters, numbers, dots(.), and hypens(-).";
             }
         }
+
+        ResponseObject<Contact> responseObject = mapper.createResponseObject(executableRequest, contact, errorMessage);
         
-        return new ResponseObject<Contact>(executableRequest, errorMessage, contact);
+        return responseObject;
     }
 
 
     public ResponseObject<Integer> deleteContactById(int id) {
 
         contactRepository.deleteById(id);
+        ResponseObject<Integer> responseObject = mapper.createResponseObject(true, Integer.valueOf(id));
 
-        return new ResponseObject<Integer>(true, "", Integer.valueOf(id));
+        return responseObject;
     }
+
+
+    public ResponseObject<FullDataDTO> getFullDataDTOByPersonId(int id) {
+        
+        FullDataDTO dto = null;
+
+        ResponseObject<Person> personResponse = this.getPersonById(id);
+        String errorMessage = personResponse.getMessage() + " ";
+
+        if(personResponse.isTaskExecutedSuccessfully()) {
+
+            dto = this.getFullDataDTOByPerson(personResponse.getAffectedObject());
+            this.extendFullDataDTOErrorMessage(errorMessage, dto);
+        }
+
+        ResponseObject<FullDataDTO> responseObject = mapper.createResponseObject(personResponse.isTaskExecutedSuccessfully(), dto, errorMessage);
+
+        return responseObject;
+    }
+
+
+    public ResponseObject<List<FullDataDTO>> getFullDataDTOListByPersonName(String name) {
+
+        List<FullDataDTO> dtoList = new ArrayList<>();
+        boolean recordsFound = true;
+        String errorMessage = "";
+
+        ResponseObject<List<Person>> personListResponse = this.getPersonByName(name);
+
+        if(personListResponse.getAffectedObject().size() > 0) {
+
+            for(Person person : personListResponse.getAffectedObject()) {
+
+                FullDataDTO dto = this.getFullDataDTOByPerson(person);
+                this.extendFullDataDTOErrorMessage(errorMessage, dto);
+                dtoList.add(dto);
+            }
+        }
+        else {
+            recordsFound = false;
+            errorMessage = personListResponse.getMessage();
+        }
+
+        ResponseObject<List<FullDataDTO>> responseObject = mapper.createResponseObject(recordsFound, dtoList, errorMessage);
+
+        return responseObject;
+    }
+
+
+    private FullDataDTO getFullDataDTOByPerson(Person person) {
+
+        Address permanentAddress = this.getAddressById( person.getPermanentAddressId() ).getAffectedObject();
+        Address temporaryAddress = null;
+
+        if(person.getTemporaryAddressId() != 0) {
+            temporaryAddress = this.getAddressById( person.getTemporaryAddressId() ).getAffectedObject();
+        }
+
+        List<Contact> permanentAddressContacts = contactRepository.findContactByAddressId( permanentAddress.getId() );
+        List<Contact> temporaryAddressContacts = null;
+
+        if(temporaryAddress != null) {
+            temporaryAddressContacts = contactRepository.findContactByAddressId( temporaryAddress.getId() );
+        }
+
+        FullDataDTO dto = mapper.createFullDataDTO(person, permanentAddress, permanentAddressContacts, temporaryAddress, temporaryAddressContacts);
+
+        return dto;
+    }
+
+
+    private void extendFullDataDTOErrorMessage(String errorMessageToBeExtended, FullDataDTO dto) {
+
+        String messagePrefix = "Please note that " + dto.getName() + " (id " + dto.getPersonId() + ") ";
+
+        if(dto.getPermanentAddressContacts().size() == 0) {
+            errorMessageToBeExtended += messagePrefix + " permanent address (id " + dto.getPermanentAddress().getId() + ") has no contacts. ";
+        }
+
+        if(dto.getTemporaryAddress() == null) {
+            errorMessageToBeExtended += messagePrefix + " has no temporary address. ";
+        }
+
+        if(dto.getTemporaryAddress() != null && dto.getTemporaryAddressContacts().size() == 0) {
+            errorMessageToBeExtended += messagePrefix + " temporary address (id " + dto.getTemporaryAddress().getId() + ") has no contacts. ";
+        }
+    }
+
     
 }

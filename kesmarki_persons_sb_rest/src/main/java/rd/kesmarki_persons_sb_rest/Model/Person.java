@@ -25,6 +25,7 @@ public class Person {
 
     private String name;
 
+    @Column(name="identity_card_no")
     private String identityCardNo;
 
     @Column(name="permanent_address_id")

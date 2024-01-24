@@ -11,6 +11,7 @@ import rd.kesmarki_persons_sb_rest.Model.Address;
 import rd.kesmarki_persons_sb_rest.Model.Contact;
 import rd.kesmarki_persons_sb_rest.Model.FullDataDTO;
 import rd.kesmarki_persons_sb_rest.Model.Person;
+import rd.kesmarki_persons_sb_rest.Model.PersonContactDTO;
 import rd.kesmarki_persons_sb_rest.Model.ResponseObject;
 import rd.kesmarki_persons_sb_rest.Repository.AddressesJPARepository;
 import rd.kesmarki_persons_sb_rest.Repository.ContactsJPARepository;
@@ -406,5 +407,85 @@ public class AppService {
 
         return responseObject;
     }
+
+
+    public ResponseObject<PersonContactDTO> getPersonContactDTOByPersonId(int id) {
+
+        PersonContactDTO dto = null;
+
+        ResponseObject<Person> personResponse = this.getPersonById(id);
+        String errorMessage = personResponse.getMessage() + " ";
+
+        if(personResponse.isTaskExecutedSuccessfully()) {
+
+            Person person = personResponse.getAffectedObject();
+            dto = this.getPersonContactDTOByPerson(person); 
+            
+            if(dto.getContacts().size() == 0) {
+                errorMessage += "Please note that " + person.getName() + " (id " + person.getId() + ") "
+                + "has no contacts in the database. ";
+            }
+        }
+
+        ResponseObject<PersonContactDTO> responseObject = mapper.createResponseObject(personResponse.isTaskExecutedSuccessfully(), dto, errorMessage);
+
+        return responseObject;
+    }
+
+
+    public ResponseObject<List<PersonContactDTO>> getPersonContactDTOListByPersonName(String name) {
+
+        List<PersonContactDTO> dtoList = new ArrayList<>();
+        boolean recordsFound = true;
+        String errorMessage = "";
+
+        ResponseObject<List<Person>> personListResponse = this.getPersonByName(name);
+
+        if(personListResponse.getAffectedObject().size() > 0) {
+
+            for(Person person : personListResponse.getAffectedObject()) {
+
+                PersonContactDTO dto = getPersonContactDTOByPerson(person);
+                dtoList.add(dto);
+
+                if(dto.getContacts().size() == 0) {
+                    errorMessage += "Please note that " + person.getName() + " (id " + person.getId() + ") "
+                    + "has no contacts in the database. ";
+                }
+            }
+        }
+        else {
+            recordsFound = false;
+            errorMessage = personListResponse.getMessage();
+        }
+
+        ResponseObject<List<PersonContactDTO>> responseObject = mapper.createResponseObject(recordsFound, dtoList, errorMessage);
+
+        return responseObject;
+    }
+
+
+    private PersonContactDTO getPersonContactDTOByPerson(Person person) {
+
+        List<Contact> contacts = new ArrayList<>();
+
+        List<Contact> contactsAtPermanentAddress = contactRepository.findContactByAddressId( person.getPermanentAddressId() );
+        List<Contact> contactsAtTemporaryAddress = null;
+
+        if(person.getTemporaryAddressId() != null) {
+            contactsAtTemporaryAddress = contactRepository.findContactByAddressId( person.getTemporaryAddressId() );
+        }
+        
+        contacts.addAll(contactsAtPermanentAddress);
+
+        if(contactsAtTemporaryAddress != null) {
+            contacts.addAll(contactsAtTemporaryAddress);
+        }
+
+        PersonContactDTO dto = mapper.createPersonContactDTO(person, contactsAtTemporaryAddress);
+
+        return dto;
+    }
+
     
 }

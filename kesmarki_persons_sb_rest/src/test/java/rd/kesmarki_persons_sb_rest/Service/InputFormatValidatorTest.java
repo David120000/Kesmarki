@@ -21,8 +21,9 @@ public class InputFormatValidatorTest {
         assertTrue(validator.validateAddressIds(1, 5));
         assertTrue(validator.validateAddressIds(53, null));
         assertTrue(validator.validateAddressIds(1, 0));
-        assertTrue(validator.validateAddressIds(-16, -16));
+        assertTrue(validator.validateAddressIds(-93, -70));
 
+        assertFalse(validator.validateAddressIds(-16, -16));
         assertFalse(validator.validateAddressIds(2, 2));
         assertFalse(validator.validateAddressIds(122, 122));
         assertFalse(validator.validateAddressIds(0, 0));

@@ -10,6 +10,6 @@ import rd.kesmarki_persons_sb_rest.Model.Contact;
 @Repository
 public interface ContactsJPARepository extends JpaRepository<Contact, Integer> {
     
-    List<Contact> findContactByAddressId(int id);
+    List<Contact> findByAddressId(int id);
 
 }

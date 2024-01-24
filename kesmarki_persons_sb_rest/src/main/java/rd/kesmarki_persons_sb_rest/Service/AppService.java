@@ -350,11 +350,11 @@ public class AppService {
             temporaryAddress = this.getAddressById( person.getTemporaryAddressId() ).getAffectedObject();
         }
 
-        List<Contact> permanentAddressContacts = contactRepository.findContactByAddressId( permanentAddress.getId() );
+        List<Contact> permanentAddressContacts = contactRepository.findByAddressId( permanentAddress.getId() );
         List<Contact> temporaryAddressContacts = null;
 
         if(temporaryAddress != null) {
-            temporaryAddressContacts = contactRepository.findContactByAddressId( temporaryAddress.getId() );
+            temporaryAddressContacts = contactRepository.findByAddressId( temporaryAddress.getId() );
         }
 
         FullDataDTO dto = mapper.createFullDataDTO(person, permanentAddress, permanentAddressContacts, temporaryAddress, temporaryAddressContacts);
@@ -473,12 +473,12 @@ public class AppService {
     private PersonContactDTO getPersonContactDTOByPerson(Person person) {
 
         List<Contact> contacts = new ArrayList<>();
-
-        List<Contact> contactsAtPermanentAddress = contactRepository.findContactByAddressId( person.getPermanentAddressId() );
+        
+        List<Contact> contactsAtPermanentAddress = contactRepository.findByAddressId( person.getPermanentAddressId() );
         List<Contact> contactsAtTemporaryAddress = null;
-
+        
         if(person.getTemporaryAddressId() != null) {
-            contactsAtTemporaryAddress = contactRepository.findContactByAddressId( person.getTemporaryAddressId() );
+            contactsAtTemporaryAddress = contactRepository.findByAddressId( person.getTemporaryAddressId() );
         }
         
         contacts.addAll(contactsAtPermanentAddress);
@@ -486,8 +486,7 @@ public class AppService {
         if(contactsAtTemporaryAddress != null) {
             contacts.addAll(contactsAtTemporaryAddress);
         }
-
-        PersonContactDTO dto = mapper.createPersonContactDTO(person, contactsAtTemporaryAddress);
+        PersonContactDTO dto = mapper.createPersonContactDTO(person, contacts);
 
         return dto;
     }
@@ -508,7 +507,7 @@ public class AppService {
             // check how many other people are connected to the person's permanent address:
             if(peopleAtThisAddress.size() == 0) {
 
-                List<Contact> contactsForThisAddress = contactRepository.findContactByAddressId( person.getPermanentAddressId() );
+                List<Contact> contactsForThisAddress = contactRepository.findByAddressId( person.getPermanentAddressId() );
 
                 for(Contact contact : contactsForThisAddress) {
                     
@@ -523,7 +522,7 @@ public class AppService {
                     // check how many other people are connected to the person's temporary address:
                     if(peopleAtThisAddress.size() == 0) {
 
-                        contactsForThisAddress = contactRepository.findContactByAddressId( person.getTemporaryAddressId() );
+                        contactsForThisAddress = contactRepository.findByAddressId( person.getTemporaryAddressId() );
 
                         for(Contact contact : contactsForThisAddress) {
                             

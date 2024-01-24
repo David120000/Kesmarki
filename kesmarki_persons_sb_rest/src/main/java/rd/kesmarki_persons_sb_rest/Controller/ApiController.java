@@ -111,4 +111,10 @@ public class ApiController {
         return ResponseEntity.ok(appService.getPersonContactDTOListByPersonName(name));
     }
 
+
+    @GetMapping("/fulldata/delete")
+    public ResponseEntity<ResponseObject<Integer>> deleteAllPersonDataByPersonId(@RequestParam(name="id") int id) {
+        return ResponseEntity.ok(appService.deleteAllPersonDataByPersonId(id));
+    }
+
 }

@@ -145,6 +145,24 @@ public class AppService {
     }
 
 
+    public ResponseObject<List<Address>> getAddressByCity(String city) {
+
+        boolean addressFound = true;
+        String errorMessage = null;
+
+        List<Address> addressListByCity = addressRepository.findByCity(city);
+
+        if(addressListByCity.size() == 0) {
+            errorMessage = "There is no Address from " + city + " in the database.";
+            addressFound = false;
+        }
+
+        ResponseObject<List<Address>> responseObject = mapper.createResponseObject(addressFound, addressListByCity, errorMessage);
+
+        return responseObject;
+    }
+
+
     public ResponseObject<Address> saveAddress(Address address) {
 
         if( address == null || (address != null && address.getCountryCode() == null) ) {
@@ -356,5 +374,37 @@ public class AppService {
         }
     }
 
+
+    public ResponseObject<List<FullDataDTO>> getFullDataDTOListByCity(String city) {
+
+        List<FullDataDTO> dtoList = new ArrayList<>();
+        boolean recordsFound = true;
+        String errorMessage = "";
+
+        ResponseObject<List<Address>> addressListResponse = this.getAddressByCity(city);
+
+        if(addressListResponse.getAffectedObject().size() > 0) {
+
+            for(Address address : addressListResponse.getAffectedObject()) {
+
+                List<Person> peopleAtThisAddress = personRepository.findByAddressId(address.getId());
+
+                for(Person person : peopleAtThisAddress) {
+                    
+                    FullDataDTO dto = this.getFullDataDTOByPerson(person);
+                    this.extendFullDataDTOErrorMessage(errorMessage, dto);
+                    dtoList.add(dto);
+                }
+            }
+        }
+        else {
+            recordsFound = false;
+            errorMessage = addressListResponse.getMessage();
+        }
+
+        ResponseObject<List<FullDataDTO>> responseObject = mapper.createResponseObject(recordsFound, dtoList, errorMessage);
+
+        return responseObject;
+    }
     
 }

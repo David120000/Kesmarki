@@ -31,6 +31,6 @@ public class Person {
     private int permanentAddressId;
 
     @Column(name="temporary_address_id")
-    private int temporaryAddressId;
+    private Integer temporaryAddressId;
 
 }

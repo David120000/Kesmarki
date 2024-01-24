@@ -346,7 +346,7 @@ public class AppService {
         Address permanentAddress = this.getAddressById( person.getPermanentAddressId() ).getAffectedObject();
         Address temporaryAddress = null;
 
-        if(person.getTemporaryAddressId() != 0) {
+        if(person.getTemporaryAddressId() != null) {
             temporaryAddress = this.getAddressById( person.getTemporaryAddressId() ).getAffectedObject();
         }
 
